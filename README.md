@@ -1,10 +1,10 @@
-# 🥇 Medalista - Analisador de Prescrições Médicas
+# 🥇 Medalista - Extrator de Medicamentos e Token de Prescrições Médicas
 
 ## O que faz
 - Lê arquivos PDF de receitas médicas
 - Encontra nomes de medicamentos
 - Abre pesquisas no site Qualidoc
-- Copia códigos QR da receita
+- Copia códigos QR token da receita
 
 ## Como instalar
 1. Baixe o Python (versão 3.8 ou mais nova)
