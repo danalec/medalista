@@ -26,6 +26,8 @@ class DadosPrescricao:
     """Container para todos os dados extraídos da prescrição."""
     medicamentos: List[InfoMedicamento]
     token_qr: Optional[str] = None
+    # Data da prescrição (apenas a data, sem hora), quando disponível
+    data: Optional[str] = None
 
 
 class AnalisadorPrescricaoMedica:
@@ -355,6 +357,31 @@ class AnalisadorPrescricaoMedica:
                 return tokens[0]
         
         return None
+
+    def extrair_data(self, texto: str) -> Optional[str]:
+        """Extrai somente a data (dd/mm/aaaa) da prescrição.
+
+        Procura padrões como:
+        - "Data e hora: 19/09/2025 14:32"
+        - "Data: 19/09/2025"
+        Retorna apenas "19/09/2025" quando encontrado.
+        """
+        # Primeiro tenta o padrão completo "Data e hora: dd/mm/aaaa ..."
+        m = re.search(r'Data\s+e\s+hora:\s*(\d{2}/\d{2}/\d{4})', texto, re.IGNORECASE)
+        if m:
+            return m.group(1)
+
+        # Em seguida tenta apenas "Data: dd/mm/aaaa"
+        m2 = re.search(r'Data:\s*(\d{2}/\d{2}/\d{4})', texto, re.IGNORECASE)
+        if m2:
+            return m2.group(1)
+
+        # Fallback: procura qualquer data dd/mm/aaaa nas primeiras linhas
+        todas_datas = re.findall(r'(\d{2}/\d{2}/\d{4})', texto)
+        if todas_datas:
+            return todas_datas[0]
+
+        return None
     
     def analisar(self) -> DadosPrescricao:
         """Método principal de análise - extrai todos os dados da prescrição."""
@@ -387,8 +414,11 @@ class AnalisadorPrescricaoMedica:
         
         # Extrai token QR
         token_qr = self.extrair_token_qr(texto)
+
+        # Extrai somente a data (sem hora)
+        data = self.extrair_data(texto)
         
-        return DadosPrescricao(medicamentos=medicamentos, token_qr=token_qr)
+        return DadosPrescricao(medicamentos=medicamentos, token_qr=token_qr, data=data)
     
     def analisar_para_dict(self) -> Dict:
         """Analisa e retorna dados como dicionário."""
@@ -402,7 +432,8 @@ class AnalisadorPrescricaoMedica:
                 }
                 for medicamento in dados.medicamentos
             ],
-            'token_qr': dados.token_qr
+            'token_qr': dados.token_qr,
+            'data': dados.data
         }
 
 
@@ -445,6 +476,11 @@ def main():
                 print(f"      Quantidade: {medicamento.quantidade} (normalizada: {medicamento.quantidade_normalizada})")
             
             if resultado.token_qr:
+                # Mostra a data (somente dd/mm/aaaa) antes do token, quando disponível
+                if getattr(resultado, 'data', None):
+                    # Linha em branco para espaçamento antes da data
+                    print()
+                    print(f"🗓️ Data: {resultado.data}")
                 print(f"\n🔗 Token QR: {resultado.token_qr}")
             else:
                 print("\n⚠️  Nenhum token QR encontrado")

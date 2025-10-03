@@ -156,6 +156,10 @@ class AutomacaoNavegadorQualidoc:
             # Analisa o PDF para extrair o token
             dados_analisados = self.parser.analisar()
             
+            # Antes de mostrar o token, exibe a data formatada (se disponível)
+            if getattr(dados_analisados, 'data', None):
+                print(f"🗓️ Data: {dados_analisados.data}")
+
             if dados_analisados.token_qr:
                 print(f"🎯 Token do PDF encontrado: {dados_analisados.token_qr}")
                 return dados_analisados.token_qr
